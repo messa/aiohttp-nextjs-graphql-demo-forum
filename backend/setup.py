@@ -8,6 +8,7 @@ setup(
     packages=find_packages(exclude=['doc', 'tests*']),
     install_requires=[
         'aiohttp',
+        'aiohttp-graphql',
         'pyyaml',
     ],
     entry_points={
