@@ -2,9 +2,11 @@ from aiohttp import web
 from aiohttp_graphql import GraphQLView
 import argparse
 import logging
+from graphql.execution.executors.asyncio import AsyncioExecutor as GQLAIOExecutor
 
-from .views import all_routes
 from .graphql import Schema
+from .model import Model
+from .views import all_routes
 
 
 def main():
@@ -16,8 +18,15 @@ def main():
 
 
 def get_app():
+    model = Model()
     app = web.Application()
     app.router.add_routes(all_routes)
-    GraphQLView.attach(app, schema=Schema, graphiql=True, route_path='/api/graphql')
-    # schema: The GraphQLSchema object that you want the view to execute when it gets a valid request.
+    app['model'] = model
+    GraphQLView.attach(
+        app,
+        route_path='/api/graphql',
+        schema=Schema,
+        graphiql=True,
+        enable_async=True,
+        executor=GQLAIOExecutor())
     return app
