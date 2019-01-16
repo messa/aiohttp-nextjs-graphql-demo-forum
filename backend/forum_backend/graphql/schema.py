@@ -4,16 +4,21 @@ from inspect import iscoroutinefunction
 from graphql import (
     graphql,
     GraphQLSchema,
+    GraphQLInterfaceType,
     GraphQLObjectType,
     GraphQLField,
     GraphQLNonNull,
     GraphQLString,
     GraphQLList,
-    GraphQLID
+    GraphQLID,
+    GraphQLBoolean,
 )
 
 
 def with_model(f):
+    '''
+    Decorator for passing model to resolver functions
+    '''
     assert iscoroutinefunction(f)
     async def wrapper(parent, info, *args, **kwargs):
         assert 'model' not in kwargs
@@ -22,8 +27,32 @@ def with_model(f):
     return wrapper
 
 
+def resolve_node_type(value):
+    # See also: https://stackoverflow.com/q/34726666/196206
+    raise Exception('NIY')
+
+
+NodeInterface = GraphQLInterfaceType(
+    name='Node',
+    fields={
+        'id': GraphQLField(type=GraphQLNonNull(GraphQLID)),
+    },
+    resolve_type=resolve_node_type)
+
+
+PageInfo = GraphQLObjectType(
+    name='PageInfo',
+    fields={
+        'hasNextPage': GraphQLField(type=GraphQLNonNull(GraphQLBoolean)),
+        'hasPreviousPage': GraphQLField(type=GraphQLNonNull(GraphQLBoolean)),
+        'startCursor': GraphQLField(type=GraphQLString),
+        'endCursor': GraphQLField(type=GraphQLString),
+    })
+
+
 ReplyPost = GraphQLObjectType(
     name='ReplyPost',
+    interfaces=[NodeInterface],
     fields=lambda: {
         'id': GraphQLField(type=GraphQLNonNull(GraphQLID)),
         'body_markdown': GraphQLField(type=GraphQLString),
@@ -38,6 +67,7 @@ async def post_replies_resolver(post, info, *, model):
 
 Post = GraphQLObjectType(
     name='Post',
+    interfaces=[NodeInterface],
     fields=lambda: {
         'id': GraphQLField(type=GraphQLNonNull(GraphQLID)),
         'body_markdown': GraphQLField(type=GraphQLString),
@@ -55,6 +85,7 @@ async def conversation_posts_resolver(conversation, info, *, model):
 
 Conversation = GraphQLObjectType(
     name='Conversation',
+    interfaces=[NodeInterface],
     fields=lambda: {
         'id': GraphQLField(type=GraphQLNonNull(GraphQLID)),
         'posts': GraphQLField(
@@ -79,6 +110,7 @@ async def topic_category_resolver(topic, info, *, model):
 
 Topic = GraphQLObjectType(
     name='Topic',
+    interfaces=[NodeInterface],
     fields=lambda: {
         'id': GraphQLField(type=GraphQLNonNull(GraphQLID)),
         'title': GraphQLField(type=GraphQLString),
@@ -88,8 +120,23 @@ Topic = GraphQLObjectType(
         'category': GraphQLField(
             type=Category,
             resolver=topic_category_resolver),
-    }
-)
+    })
+
+
+TopicEdge = GraphQLObjectType(
+    name='TopicEdge',
+    fields={
+        'cursor': GraphQLField(type=GraphQLNonNull(GraphQLString)),
+        'node': GraphQLField(type=Topic),
+    })
+
+
+TopicConnection = GraphQLObjectType(
+    name='TopicConnection',
+    fields={
+        'pageInfo': GraphQLField(type=GraphQLNonNull(PageInfo)),
+        'edges': GraphQLField(type=GraphQLList(TopicEdge)),
+    })
 
 
 @with_model
@@ -103,14 +150,19 @@ async def cateogory_topics_resolver(category, info, *, model):
 
 Category = GraphQLObjectType(
     name='Category',
+    interfaces=[NodeInterface],
     fields={
         'id': GraphQLField(type=GraphQLNonNull(GraphQLID)),
         'title': GraphQLField(type=GraphQLString),
         'topics': GraphQLField(
-            type=GraphQLList(Topic),
+            type=TopicConnection,
             resolver=cateogory_topics_resolver),
     }
 )
+
+
+async def node_resolver(root, info):
+    raise Exception('NIY')
 
 
 @with_model
@@ -122,6 +174,9 @@ Schema = GraphQLSchema(
     query=GraphQLObjectType(
         name='RootQueryType',
         fields={
+            'node': GraphQLField(
+                type=NodeInterface,
+                resolver=node_resolver),
             'categories': GraphQLField(
                 type=GraphQLList(Category),
                 resolver=categories_resolver),
