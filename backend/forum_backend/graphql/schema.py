@@ -56,8 +56,23 @@ ReplyPost = GraphQLObjectType(
     fields=lambda: {
         'id': GraphQLField(type=GraphQLNonNull(GraphQLID)),
         'body_markdown': GraphQLField(type=GraphQLString),
-    }
-)
+    })
+
+
+ReplyPostEdge = GraphQLObjectType(
+    name='ReplyPostEdge',
+    fields={
+        'cursor': GraphQLField(type=GraphQLNonNull(GraphQLString)),
+        'node': GraphQLField(type=ReplyPost),
+    })
+
+
+ReplyPostConnection = GraphQLObjectType(
+    name='ReplyPostConnection',
+    fields={
+        'pageInfo': GraphQLField(type=GraphQLNonNull(PageInfo)),
+        'edges': GraphQLField(type=GraphQLList(ReplyPostEdge)),
+    })
 
 
 @with_model
@@ -72,10 +87,25 @@ Post = GraphQLObjectType(
         'id': GraphQLField(type=GraphQLNonNull(GraphQLID)),
         'body_markdown': GraphQLField(type=GraphQLString),
         'replies': GraphQLField(
-            type=GraphQLList(ReplyPost),
+            type=ReplyPostConnection,
             resolver=post_replies_resolver),
-    }
-)
+    })
+
+
+PostEdge = GraphQLObjectType(
+    name='PostEdge',
+    fields={
+        'cursor': GraphQLField(type=GraphQLNonNull(GraphQLString)),
+        'node': GraphQLField(type=Post),
+    })
+
+
+PostConnection = GraphQLObjectType(
+    name='PostConnection',
+    fields={
+        'pageInfo': GraphQLField(type=GraphQLNonNull(PageInfo)),
+        'edges': GraphQLField(type=GraphQLList(PostEdge)),
+    })
 
 
 @with_model
@@ -89,10 +119,25 @@ Conversation = GraphQLObjectType(
     fields=lambda: {
         'id': GraphQLField(type=GraphQLNonNull(GraphQLID)),
         'posts': GraphQLField(
-            type=GraphQLList(Post),
+            type=PostConnection,
             resolver=conversation_posts_resolver),
-    }
-)
+    })
+
+
+ConversationEdge = GraphQLObjectType(
+    name='ConversationEdge',
+    fields={
+        'cursor': GraphQLField(type=GraphQLNonNull(GraphQLString)),
+        'node': GraphQLField(type=Conversation),
+    })
+
+
+ConversationConnection = GraphQLObjectType(
+    name='ConversationConnection',
+    fields={
+        'pageInfo': GraphQLField(type=GraphQLNonNull(PageInfo)),
+        'edges': GraphQLField(type=GraphQLList(ConversationEdge)),
+    })
 
 
 @with_model
@@ -157,8 +202,7 @@ Category = GraphQLObjectType(
         'topics': GraphQLField(
             type=TopicConnection,
             resolver=cateogory_topics_resolver),
-    }
-)
+    })
 
 
 async def node_resolver(root, info):
@@ -181,5 +225,4 @@ Schema = GraphQLSchema(
                 type=GraphQLList(Category),
                 resolver=categories_resolver),
         }
-    )
-)
+    ))
