@@ -2,6 +2,7 @@ from asyncio import create_task, gather
 from collections import namedtuple
 from functools import wraps
 from inspect import iscoroutinefunction
+import logging
 from graphql import (
     graphql,
     GraphQLSchema,
@@ -17,13 +18,16 @@ from graphql import (
     GraphQLBoolean,
 )
 
+from .relay_helpers import connection_args, connection_from_list, relay_connection_type
+
 '''
 There is project github.com/graphql-python/graphql-relay-py but right now it
 is somewhat outdated, so we use our own implementation of Relay connection
 helpers.
 '''
 
-from .relay_helpers import connection_args, connection_from_list, relay_connection_type
+
+logger = logging.getLogger(__name__)
 
 
 def with_model(f):
@@ -38,9 +42,13 @@ def with_model(f):
     return wrapper
 
 
-def resolve_node_type(value):
+def resolve_node_type(obj, info):
     # See also: https://stackoverflow.com/q/34726666/196206
-    raise Exception('NIY')
+    if obj.node_type == 'Post':
+        return Post
+    if obj.node_type == 'Category':
+        return Category
+    raise Exception(f'Unknown node type: {obj!r}')
 
 
 NodeInterface = GraphQLInterfaceType(
@@ -158,8 +166,11 @@ Category = GraphQLObjectType(
 CategoryConnection = relay_connection_type(Category)
 
 
-async def node_resolver(root, info):
-    raise Exception('NIY')
+@with_model
+async def node_resolver(root, info, model, id):
+    obj = await model.get_by_id(id)
+    logger.debug('node_resolver %r -> %r', id, obj)
+    return obj
 
 
 @with_model
@@ -173,6 +184,9 @@ Schema = GraphQLSchema(
         fields={
             'node': GraphQLField(
                 type=NodeInterface,
+                args={
+                    'id': GraphQLArgument(GraphQLNonNull(GraphQLID)),
+                },
                 resolver=node_resolver),
             'categories': GraphQLField(
                 type=CategoryConnection,

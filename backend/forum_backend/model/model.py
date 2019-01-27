@@ -52,6 +52,15 @@ dummy_data = yaml.load('''
 
 class Model:
 
+    async def get_by_id(self, id):
+        for cat_id, cat in dummy_data['categories'].items():
+            if cat_id == id:
+                return Category(cat_id, **cat)
+        for p_id, p_data in dummy_data['conversation_posts'].items():
+            if p_id == id:
+                return Post(p_id, **p_data)
+        return None
+
     async def list_categories(self):
         await asyncio.sleep(.05)
         categories = []
@@ -92,6 +101,8 @@ class Model:
 
 class Category:
 
+    node_type = 'Category'
+
     def __init__(self, category_id, title, topic_ids):
         assert isinstance(topic_ids, list)
         self.id = category_id
@@ -114,6 +125,8 @@ class Conversation:
 
 
 class Post:
+
+    node_type = 'Post'
 
     def __init__(self, post_id, create_date, body_markdown, conversation_id, reply_to_post_id=None):
         self.id = post_id
