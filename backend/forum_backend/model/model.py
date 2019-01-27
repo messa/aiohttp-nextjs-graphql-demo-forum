@@ -82,12 +82,12 @@ class Model:
 
     async def list_post_replies(self, post_id):
         await asyncio.sleep(.05)
-        posts = []
-        for post_id, post_data in dummy_data['conversation_posts'].items():
-            if post_data.get('reply_to_post_id') != post_id:
+        replies = []
+        for p_id, p_data in dummy_data['conversation_posts'].items():
+            if p_data.get('reply_to_post_id') != post_id:
                 continue
-            posts.append(Post(post_id, **post_data))
-        return posts
+            replies.append(Post(p_id, **p_data))
+        return replies
 
 
 class Category:
