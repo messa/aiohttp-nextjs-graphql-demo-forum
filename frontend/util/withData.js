@@ -19,12 +19,18 @@ export default (ComposedComponent, options = {}) => {
       const environment = initEnvironment()
 
       if (options.query) {
-        // Provide the `url` prop data in case a graphql query uses it
-        // const url = { query: ctx.query, pathname: ctx.pathname }
-        const variables = {}
+        let queryVariables = {}
+        if (options.variables) {
+          queryVariables = options.variables(ctx)
+        }
         // TODO: Consider RelayQueryResponseCache
         // https://github.com/facebook/relay/issues/1687#issuecomment-302931855
-        queryProps = await fetchQuery(environment, options.query, variables)
+        try {
+          queryProps = await fetchQuery(environment, options.query, queryVariables)
+        } catch (e) {
+          // do not kill the whole Node.js process
+          throw new Error(`fetchQuery failed: ${e}`)
+        }
         queryRecords = environment
           .getStore()
           .getSource()

@@ -7,8 +7,8 @@ let relayEnvironment = null
 
 // Define a function that fetches the results of an operation (query/mutation/etc)
 // and returns its results as a Promise:
-function fetchQuery (operation, variables, cacheConfig, uploadables) {
-  return fetch(relayEndpoint, {
+async function fetchQuery (operation, variables, cacheConfig, uploadables) {
+  const r = await fetch(relayEndpoint, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -18,7 +18,12 @@ function fetchQuery (operation, variables, cacheConfig, uploadables) {
       query: operation.text, // GraphQL text from input
       variables
     })
-  }).then(response => response.json())
+  })
+  if (r.status != 200) {
+    throw new Error(`POST ${relayEndpoint} failed with status ${r.status}`)
+  }
+  const data = await r.json()
+  return data
 }
 
 export default function initEnvironment ({ records = {} } = {}) {

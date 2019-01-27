@@ -1,5 +1,6 @@
 import React from 'react'
 import { graphql } from 'react-relay'
+import Link from 'next/link'
 import PageLayout from '../components/PageLayout'
 import withData from '../util/withData'
 
@@ -14,7 +15,7 @@ class IndexPage extends React.Component {
         <ul>
           {categories.edges.map(edge => edge.node).map(category => (
             <li key={category.id}>
-              {category.title}
+              <Link href={`/category?id=${category.id}`}><a>{category.title}</a></Link>
             </li>
           ))}
         </ul>
