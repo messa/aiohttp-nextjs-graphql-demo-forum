@@ -1,0 +1,88 @@
+schema {
+  query: RootQueryType
+}
+
+type Category implements Node {
+  id: ID!
+  title: String
+  topics: TopicConnection
+}
+
+type CategoryConnection {
+  pageInfo: PageInfo!
+  edges: [CategoryEdge]
+}
+
+type CategoryEdge {
+  cursor: String!
+  node: Category
+}
+
+type Conversation implements Node {
+  id: ID!
+  posts(before: String, after: String, first: Int, last: Int): PostConnection
+}
+
+interface Node {
+  id: ID!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type Post implements Node {
+  id: ID!
+  body_markdown: String
+  replies(before: String, after: String, first: Int, last: Int): ReplyPostConnection
+}
+
+type PostConnection {
+  pageInfo: PageInfo!
+  edges: [PostEdge]
+}
+
+type PostEdge {
+  cursor: String!
+  node: Post
+}
+
+type ReplyPost implements Node {
+  id: ID!
+  body_markdown: String
+}
+
+type ReplyPostConnection {
+  pageInfo: PageInfo!
+  edges: [ReplyPostEdge]
+}
+
+type ReplyPostEdge {
+  cursor: String!
+  node: ReplyPost
+}
+
+type RootQueryType {
+  node(id: ID!): Node
+  categories(before: String, after: String, first: Int, last: Int): CategoryConnection
+}
+
+type Topic implements Node {
+  id: ID!
+  title: String
+  conversation: Conversation
+  category: Category
+}
+
+type TopicConnection {
+  pageInfo: PageInfo!
+  edges: [TopicEdge]
+}
+
+type TopicEdge {
+  cursor: String!
+  node: Topic
+}
