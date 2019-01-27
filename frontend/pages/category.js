@@ -7,7 +7,6 @@ import withData from '../util/withData'
 class CategoryPage extends React.Component {
 
   render() {
-    console.debug(this.props)
     const category = this.props.node
     return (
       <PageLayout>
