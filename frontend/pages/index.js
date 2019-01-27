@@ -1,12 +1,13 @@
 import React from 'react'
+import PageLayout from '../components/PageLayout'
 
 class IndexPage extends React.Component {
 
   render() {
     return (
-      <div>
-        <h1>Forum</h1>
-      </div>
+      <PageLayout>
+        <h1 className='mt0'>Forum</h1>
+      </PageLayout>
     )
   }
 
