@@ -1,7 +1,6 @@
 import React from 'react'
-import { fetchQuery } from 'react-relay'
+import { fetchQuery, ReactRelayContext } from 'react-relay'
 import initEnvironment from './createRelayEnvironment'
-import RelayProvider from './RelayProvider'
 
 export default (ComposedComponent, options = {}) => {
   return class WithData extends React.Component {
@@ -52,9 +51,9 @@ export default (ComposedComponent, options = {}) => {
 
     render () {
       return (
-        <RelayProvider environment={this.environment} variables={{}}>
+        <ReactRelayContext.Provider value={{ environment: this.environment, variables: {} }}>
           <ComposedComponent {...this.props} />
-        </RelayProvider>
+        </ReactRelayContext.Provider>
       )
     }
   }
