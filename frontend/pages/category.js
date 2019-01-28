@@ -3,6 +3,7 @@ import { graphql } from 'react-relay'
 import Link from 'next/link'
 import PageLayout from '../components/PageLayout'
 import withData from '../util/withData'
+import TopicList from '../components/TopicList'
 
 class CategoryPage extends React.Component {
 
@@ -13,6 +14,7 @@ class CategoryPage extends React.Component {
         <p><Link href='/'><a>Back to homepage</a></Link></p>
         <h1 className='mt0 mb1'>{category.title}</h1>
         <p className='mt0 black-50 f6'>Category</p>
+        <TopicList category={category} />
       </PageLayout>
     )
   }
@@ -27,6 +29,7 @@ export default withData(CategoryPage, {
         id
         ...on Category {
           title
+          ...TopicList_category
         }
       }
     }
