@@ -1,5 +1,6 @@
 import React from 'react'
 import { createFragmentContainer, graphql } from 'react-relay'
+import Topic from './Topic'
 
 class TopicList extends React.Component {
 
@@ -7,8 +8,9 @@ class TopicList extends React.Component {
     const { category } = this.props
     return (
       <div className='TopicList'>
-        <h2>Topics</h2>
-        <pre>{JSON.stringify(category.topics, null, 2)}</pre>
+        {category.topics.edges.map(edge => edge.node).map(topic => (
+          <Topic key={topic.id} topic={topic} />
+        ))}
       </div>
     )
   }
@@ -24,6 +26,7 @@ export default createFragmentContainer(TopicList, {
           node {
             id
             title
+            ...Topic_topic
           }
         }
       }

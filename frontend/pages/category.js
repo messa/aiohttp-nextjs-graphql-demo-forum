@@ -11,7 +11,7 @@ class CategoryPage extends React.Component {
     const category = this.props.node
     return (
       <PageLayout>
-        <p><Link href='/'><a>Back to homepage</a></Link></p>
+        <p><Link href='/' prefetch><a>Back to homepage</a></Link></p>
         <h1 className='mt0 mb1'>{category.title}</h1>
         <p className='mt0 black-50 f6'>Category</p>
         <TopicList category={category} />

@@ -64,7 +64,9 @@ ReplyPost = GraphQLObjectType(
     interfaces=[NodeInterface],
     fields=lambda: {
         'id': GraphQLField(type=GraphQLNonNull(GraphQLID)),
-        'body_markdown': GraphQLField(type=GraphQLString),
+        'bodyMarkdown': GraphQLField(
+            type=GraphQLString,
+            resolver=lambda post, info: post.body_markdown),
     })
 
 
@@ -81,7 +83,9 @@ Post = GraphQLObjectType(
     interfaces=[NodeInterface],
     fields=lambda: {
         'id': GraphQLField(type=GraphQLNonNull(GraphQLID)),
-        'body_markdown': GraphQLField(type=GraphQLString),
+        'bodyMarkdown': GraphQLField(
+            type=GraphQLString,
+            resolver=lambda post, info: post.body_markdown),
         'replies': GraphQLField(
             type=ReplyPostConnection,
             args=connection_args,
