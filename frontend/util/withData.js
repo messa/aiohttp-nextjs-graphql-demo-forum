@@ -28,7 +28,6 @@ export default (ComposedComponent, options = {}) => {
         try {
           queryProps = await fetchQuery(environment, options.query, queryVariables)
         } catch (e) {
-          // do not kill the whole Node.js process
           throw new Error(`fetchQuery failed: ${e}`)
         }
         queryRecords = environment
