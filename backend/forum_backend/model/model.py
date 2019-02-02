@@ -53,6 +53,7 @@ dummy_data = yaml.load('''
 class Model:
 
     async def get_by_id(self, id):
+        await asyncio.sleep(.01)
         for cat_id, cat in dummy_data['categories'].items():
             if cat_id == id:
                 return Category(cat_id, **cat)
@@ -62,24 +63,24 @@ class Model:
         return None
 
     async def list_categories(self):
-        await asyncio.sleep(.05)
+        await asyncio.sleep(.01)
         categories = []
         for cat_id, cat in dummy_data['categories'].items():
             categories.append(Category(cat_id, **cat))
         return categories
 
     async def get_topic(self, topic_id):
-        await asyncio.sleep(.02)
+        await asyncio.sleep(.01)
         return Topic(topic_id, **dummy_data['topics'][topic_id])
 
     async def get_conversation(self, conversation_id):
-        await asyncio.sleep(.05)
+        await asyncio.sleep(.01)
         return Conversation(
             conversation_id,
             **dummy_data['conversations'][conversation_id])
 
     async def list_conversation_posts(self, conversation_id):
-        await asyncio.sleep(.05)
+        await asyncio.sleep(.01)
         posts = []
         for post_id, post_data in dummy_data['conversation_posts'].items():
             if post_data['conversation_id'] != conversation_id:
@@ -90,7 +91,7 @@ class Model:
         return posts
 
     async def list_post_replies(self, post_id):
-        await asyncio.sleep(.05)
+        await asyncio.sleep(.01)
         replies = []
         for p_id, p_data in dummy_data['conversation_posts'].items():
             if p_data.get('reply_to_post_id') != post_id:
