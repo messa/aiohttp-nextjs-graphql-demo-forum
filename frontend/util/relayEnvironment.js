@@ -26,6 +26,8 @@ async function fetchQuery(operation, variables, cacheConfig, uploadables) {
   return data
 }
 
+let subscriptionClient = null
+
 function setupSubscription(config, variables, cacheConfig, observer) {
   // https://github.com/facebook/relay/issues/1655#issuecomment-349957415
   const onNext = (result) => {
@@ -41,7 +43,12 @@ function setupSubscription(config, variables, cacheConfig, observer) {
     observer.onCompleted()
   }
   const query = config.text
-  const subscriptionClient = new SubscriptionClient(wsUrl, { reconnect: true })
+  if (!subscriptionClient) {
+    console.debug(`Connecting to ${wsUrl}`)
+    subscriptionClient = new SubscriptionClient(wsUrl, { reconnect: true })
+  } else {
+    console.debug(`Reusing already existing subscriptionClient to ${wsUrl}`)
+  }
   const client = subscriptionClient.request({ query, variables }).subscribe(
     onNext,
     onError,
