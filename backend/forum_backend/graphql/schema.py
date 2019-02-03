@@ -1,5 +1,5 @@
-from asyncio import create_task, gather
-from collections import namedtuple
+from asyncio import create_task, gather, Event, CancelledError
+from collections import defaultdict, namedtuple
 from functools import wraps
 from inspect import iscoroutinefunction
 import logging
@@ -23,6 +23,9 @@ from .relay_helpers import connection_args, connection_from_list, relay_connecti
 
 
 logger = logging.getLogger(__name__)
+
+
+conversation_update_events = defaultdict(list) # { topic id: [Event] }
 
 
 def with_model(f):
@@ -97,6 +100,7 @@ PostConnection = relay_connection_type(Post)
 
 @with_model
 async def conversation_posts_resolver(conversation, info, model, **kwargs):
+    logger.debug('conversation_posts_resolver(%r)', conversation)
     posts = await model.list_conversation_posts(conversation_id=conversation.id)
     return connection_from_list(posts, **kwargs)
 
@@ -185,6 +189,9 @@ async def handle_post_reply(info, **kwargs):
     logger.info('handle_post_reply(%r, **%r)', info, kwargs)
     model = info.context['request'].app['model']
     reply_post = await model.create_reply_post(kwargs['postId'], kwargs['bodyMarkdown'])
+    for event in conversation_update_events[reply_post.conversation_id]:
+        logger.info('Notifying event %r for conversation %r', event, reply_post.conversation_id)
+        event.set()
     return reply_post
 
 
@@ -205,6 +212,31 @@ async def resolve_count_seconds(root, info):
     for i in range(100):
         yield i
         await sleep(1)
+
+
+async def resolve_conversation_updated(root, info, *, conversationId):
+    try:
+        model = info.context['request'].app['model']
+        event = Event()
+        conversation_update_events[conversationId].append(event)
+        logger.info('Placed event %r for conversation %r', event, conversationId)
+        try:
+            while True:
+                await event.wait()
+                logger.info('Triggered event %r for conversation %r', event, conversationId)
+                event.clear()
+                conversation = await model.get_by_id(conversationId)
+                logger.info('Yielding conversation %r', conversation)
+                yield conversation
+        finally:
+            conversation_update_events[conversationId].remove(event)
+            logger.info('Removed event %r for conversation %r', event, conversationId)
+    except CancelledError:
+        logger.info('resolve_conversation_updated %r', e)
+        return
+    except Exception as e:
+        logger.exception('resolve_conversation_updated failed: %r', e)
+        raise e
 
 
 Schema = GraphQLSchema(
@@ -235,5 +267,11 @@ Schema = GraphQLSchema(
             'countSeconds': GraphQLField(
                 type=GraphQLInt,
                 resolver=resolve_count_seconds),
+            'conversationUpdated': GraphQLField(
+                type=Conversation,
+                args={
+                    'conversationId': GraphQLArgument(GraphQLNonNull(GraphQLID)),
+                },
+                resolver=resolve_conversation_updated),
         }
     ))

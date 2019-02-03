@@ -89,6 +89,7 @@ type ReplyPostEdge {
 
 type Subscription {
   countSeconds: Int
+  conversationUpdated(conversationId: ID!): Conversation
 }
 
 type Topic implements Node {

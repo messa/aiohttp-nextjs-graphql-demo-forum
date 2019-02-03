@@ -148,6 +148,9 @@ class Conversation:
     def __init__(self, conversation_id):
         self.id = conversation_id
 
+    def __repr__(self):
+        return f'Conversation({self.id!r})'
+
 
 class Post:
 

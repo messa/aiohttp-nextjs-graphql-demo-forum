@@ -6,18 +6,24 @@ import Conversation from './Conversation'
 class Topic extends React.Component {
 
   componentDidMount() {
+    const { topic } = this.props
     this.relaySubscription = requestSubscription(
       getRelayEnvironment(),
       {
         subscription: graphql`
-          subscription Topic_CountSubscription {
-            countSeconds
+          subscription Topic_ConversationUpdatedSubscription($conversationId: ID!) {
+            conversationUpdated(conversationId: $conversationId) {
+              id
+            }
           }
         `,
-        variables: {},
+        variables: { conversationId: topic.conversation.id },
         onCompleted: () => console.info('subscription completed'),
         onError: (err) => console.error(err),
-        onNext: (response) => console.info(response),
+        onNext: (response) => {
+          console.info('subscription onNext:', response)
+          this.refetch()
+        },
       }
     )
   }
@@ -34,12 +40,20 @@ class Topic extends React.Component {
   }
 
   refetch = () => {
-    console.info('Topic.refetch')
+    if (this.refetchInProgress) {
+      console.debug('Topic refetch already in progress')
+      return
+    }
+    console.debug('Topic refetch')
     const { relay, topic } = this.props
+    this.refetchInProgress = true
     relay.refetch(
       { topicId: topic.id },
       null,
-      () => { console.log('Refetch done') },
+      () => {
+        console.debug('Refetch done')
+        this.refetchInProgress = false
+      },
       { force: true }
     )
   }
@@ -72,6 +86,7 @@ export default createRefetchContainer(
         id
         title
         conversation {
+          id
           ...Conversation_conversation
         }
       }
@@ -84,6 +99,7 @@ export default createRefetchContainer(
           id
           title
           conversation {
+            id
             ...Conversation_conversation
           }
         }
