@@ -9,6 +9,7 @@ from graphql import (
     GraphQLInterfaceType,
     GraphQLObjectType,
     GraphQLField,
+    GraphQLInputObjectField,
     GraphQLArgument,
     GraphQLNonNull,
     GraphQLString,
@@ -18,13 +19,7 @@ from graphql import (
     GraphQLBoolean,
 )
 
-from .relay_helpers import connection_args, connection_from_list, relay_connection_type
-
-'''
-There is project github.com/graphql-python/graphql-relay-py but right now it
-is somewhat outdated, so we use our own implementation of Relay connection
-helpers.
-'''
+from .relay_helpers import connection_args, connection_from_list, relay_connection_type, mutation
 
 
 logger = logging.getLogger(__name__)
@@ -182,9 +177,28 @@ async def categories_resolver(root, info, model, **kwargs):
     return connection_from_list(await model.list_categories(), **kwargs)
 
 
+async def handle_post_reply(info, **kwargs):
+    logger.info('handle_post_reply(%r, **%r)', info, kwargs)
+    model = info.context['request'].app['model']
+    reply_post = await model.create_reply_post(kwargs['postId'], kwargs['bodyMarkdown'])
+    return reply_post
+
+
+PostReplyMutation = mutation(
+    name='PostReply',
+    input_fields={
+        'postId': GraphQLInputObjectField(type=GraphQLNonNull(GraphQLID)),
+        'bodyMarkdown': GraphQLInputObjectField(type=GraphQLNonNull(GraphQLString)),
+    },
+    output_fields={
+        'newReplyPost': GraphQLField(type=ReplyPost),
+    },
+    mutate_and_get_payload=handle_post_reply)
+
+
 Schema = GraphQLSchema(
     query=GraphQLObjectType(
-        name='RootQueryType',
+        name='Query',
         fields={
             'node': GraphQLField(
                 type=NodeInterface,
@@ -196,5 +210,11 @@ Schema = GraphQLSchema(
                 type=CategoryConnection,
                 args=connection_args,
                 resolver=categories_resolver),
+        }
+    ),
+    mutation=GraphQLObjectType(
+        name='Mutation',
+        fields={
+            'postReply': PostReplyMutation,
         }
     ))

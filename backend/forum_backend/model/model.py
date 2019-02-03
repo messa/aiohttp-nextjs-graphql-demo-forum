@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime
 import yaml
+from uuid import uuid4
 
 
 dummy_data = yaml.load('''
@@ -98,6 +99,19 @@ class Model:
                 continue
             replies.append(Post(p_id, **p_data))
         return replies
+
+    async def create_reply_post(self, parent_post_id, body_markdown):
+        await asyncio.sleep(.01)
+        parent_post = dummy_data['conversation_posts'][parent_post_id]
+        new_post_id = 'cp' + uuid4().hex[:9]
+        assert new_post_id not in dummy_data['conversation_posts']
+        dummy_data['conversation_posts'][new_post_id] = {
+            'conversation_id': parent_post['conversation_id'],
+            'body_markdown': body_markdown,
+            'create_date': datetime.utcnow(),
+            'reply_to_post_id': parent_post.get('reply_to_post_id') or parent_post_id,
+        }
+        return Post(new_post_id, **dummy_data['conversation_posts'][new_post_id])
 
 
 class Category:

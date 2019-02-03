@@ -1,5 +1,6 @@
 schema {
-  query: RootQueryType
+  query: Query
+  mutation: Mutation
 }
 
 type Category implements Node {
@@ -21,6 +22,10 @@ type CategoryEdge {
 type Conversation implements Node {
   id: ID!
   posts(before: String, after: String, first: Int, last: Int): PostConnection
+}
+
+type Mutation {
+  postReply(input: PostReplyInput!): PostReplyPayload
 }
 
 interface Node {
@@ -50,6 +55,22 @@ type PostEdge {
   node: Post
 }
 
+input PostReplyInput {
+  bodyMarkdown: String!
+  clientMutationId: Boolean
+  postId: ID!
+}
+
+type PostReplyPayload {
+  newReplyPost: ReplyPost
+  clientMutationId: Boolean
+}
+
+type Query {
+  node(id: ID!): Node
+  categories(before: String, after: String, first: Int, last: Int): CategoryConnection
+}
+
 type ReplyPost implements Node {
   id: ID!
   bodyMarkdown: String
@@ -63,11 +84,6 @@ type ReplyPostConnection {
 type ReplyPostEdge {
   cursor: String!
   node: ReplyPost
-}
-
-type RootQueryType {
-  node(id: ID!): Node
-  categories(before: String, after: String, first: Int, last: Int): CategoryConnection
 }
 
 type Topic implements Node {

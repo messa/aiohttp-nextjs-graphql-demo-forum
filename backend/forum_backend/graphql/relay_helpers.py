@@ -1,7 +1,11 @@
+import asyncio
 from collections import namedtuple
+import logging
 from graphql import (
     GraphQLObjectType,
+    GraphQLInputObjectType,
     GraphQLField,
+    GraphQLInputObjectField,
     GraphQLArgument,
     GraphQLNonNull,
     GraphQLString,
@@ -9,6 +13,16 @@ from graphql import (
     GraphQLList,
     GraphQLBoolean,
 )
+
+
+'''
+There is project github.com/graphql-python/graphql-relay-py but right now it
+is somewhat outdated, so we use our own implementation of Relay connection
+helpers.
+'''
+
+
+logger = logging.getLogger(__name__)
 
 
 connection_args = {
@@ -91,3 +105,50 @@ def connection_from_list(items, before=None, after=None, first=None, last=None):
             start_cursor=edges[0].cursor if edges else None,
             end_cursor=edges[-1].cursor if edges else None,
         ))
+
+
+def mutation(name, input_fields, output_fields, mutate_and_get_payload, description=None):
+    # https://github.com/graphql/graphql-relay-js/blob/master/src/mutation/mutation.js
+    augmented_input_fields = {
+        **input_fields,
+        'clientMutationId': GraphQLInputObjectField(type=GraphQLBoolean),
+    }
+    augmented_output_fields = {
+        **output_fields,
+        'clientMutationId': GraphQLField(type=GraphQLBoolean),
+    }
+    output_type = GraphQLObjectType(
+        name=name + 'Payload',
+        fields=augmented_output_fields)
+    input_type = GraphQLInputObjectType(
+        name=name + 'Input',
+        fields=augmented_input_fields)
+
+    def sync_resolve(parent, info, *, input):
+        logger.info('sync_resolver(%r, %r, %r)', parent, info, input)
+        assert isinstance(input, dict)
+        cmi = input.get('clientMutationId')
+        result = mutate_and_get_payload(info, **input)
+        result.clientMutationId = cmi
+        return result
+
+    async def async_resolve(parent, info, *, input):
+        logger.info('async_resolver(%r, %r, %r)', parent, info, input)
+        assert isinstance(input, dict)
+        cmi = input.get('clientMutationId')
+        result = await mutate_and_get_payload(info, **input)
+        result.clientMutationId = cmi
+        return result
+
+    if asyncio.iscoroutinefunction(mutate_and_get_payload):
+        resolve = async_resolve
+    else:
+        resolve = sync_resolve
+
+    return GraphQLField(
+        description=description,
+        type=output_type,
+        args={
+            'input': GraphQLArgument(type=GraphQLNonNull(type=input_type)),
+        },
+        resolver=resolve)

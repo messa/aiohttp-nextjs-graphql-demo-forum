@@ -1,6 +1,6 @@
 import React from 'react'
 import { fetchQuery, ReactRelayContext } from 'react-relay'
-import initEnvironment from './createRelayEnvironment'
+import { initRelayEnvironment } from './relayEnvironment'
 
 export default (ComposedComponent, options = {}) => {
   return class WithData extends React.Component {
@@ -15,7 +15,7 @@ export default (ComposedComponent, options = {}) => {
 
       let queryProps = {}
       let queryRecords = {}
-      const environment = initEnvironment()
+      const environment = initRelayEnvironment()
 
       if (options.query) {
         let queryVariables = {}
@@ -44,7 +44,7 @@ export default (ComposedComponent, options = {}) => {
 
     constructor (props) {
       super(props)
-      this.environment = initEnvironment({
+      this.environment = initRelayEnvironment({
         records: props.queryRecords
       })
     }

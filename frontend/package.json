@@ -5,6 +5,7 @@
   "homepage": "https://github.com/messa/aiohttp-nextjs-graphql-demo-forum",
   "main": "index.js",
   "scripts": {
+    "predev": "npm run relay",
     "dev": "node server.js",
     "build": "next build",
     "start": "NODE_ENV=production node server.js",
