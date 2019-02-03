@@ -61,6 +61,12 @@ class Model:
         for p_id, p_data in dummy_data['conversation_posts'].items():
             if p_id == id:
                 return Post(p_id, **p_data)
+        for t_id, t_data in dummy_data['topics'].items():
+            if t_id == id:
+                return Topic(t_id, **t_data)
+        for c_id, c_data in dummy_data['conversations'].items():
+            if c_id == id:
+                return Conversation(c_id, **c_data)
         return None
 
     async def list_categories(self):
@@ -127,6 +133,8 @@ class Category:
 
 class Topic:
 
+    node_type = 'Topic'
+
     def __init__(self, category_id, title, conversation_id):
         self.id = category_id
         self.title = title
@@ -134,6 +142,8 @@ class Topic:
 
 
 class Conversation:
+
+    node_type = 'Conversation'
 
     def __init__(self, conversation_id):
         self.id = conversation_id

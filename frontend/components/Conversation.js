@@ -5,11 +5,11 @@ import Post from './Post'
 class Conversation extends React.Component {
 
   render() {
-    const { conversation } = this.props
+    const { conversation, refetchTopic } = this.props
     return (
       <div className='Conversation'>
         {conversation.posts.edges.map(edge => edge.node).map(post => (
-          <Post key={post.id} post={post} level={0} />
+          <Post key={post.id} post={post} level={0} refetchTopic={refetchTopic} />
         ))}
         <style jsx>{`
           .Conversation {

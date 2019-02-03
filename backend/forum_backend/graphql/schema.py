@@ -43,6 +43,10 @@ def resolve_node_type(obj, info):
         return Post
     if obj.node_type == 'Category':
         return Category
+    if obj.node_type == 'Topic':
+        return Topic
+    if obj.node_type == 'Conversation':
+        return Conversation
     raise Exception(f'Unknown node type: {obj!r}')
 
 

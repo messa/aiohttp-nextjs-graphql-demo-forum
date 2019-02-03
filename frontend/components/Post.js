@@ -32,7 +32,7 @@ class Post extends React.Component {
   }
 
   handleSubmitReply = () => {
-    const { post } = this.props
+    const { post, refetchTopic } = this.props
     const { replyText } = this.state
     commitMutation(
       getRelayEnvironment(),
@@ -41,6 +41,9 @@ class Post extends React.Component {
         variables: { input: { postId: post.id, bodyMarkdown: replyText }},
         onCompleted: (response, errors) => {
           console.log('Response received from server.')
+          if (refetchTopic) {
+            refetchTopic()
+          }
         },
         onError: err => console.error(err),
       },
@@ -50,7 +53,7 @@ class Post extends React.Component {
 
   render() {
     const { showReplyForm, replyText } = this.state
-    const { post, level } = this.props
+    const { post, level, refetchTopic } = this.props
     const replies = post.replies && post.replies.edges.map(edge => edge.node)
     return (
       <div className='Post'>
@@ -69,7 +72,7 @@ class Post extends React.Component {
             <p className='f7 b'>Replies:</p>
             <div style={{ marginLeft: '2em' }}>
               {replies.map(reply => (
-                <Post key={reply.id} post={reply} level={level + 1} />
+                <Post key={reply.id} post={reply} level={level + 1} refetchTopic={refetchTopic} />
               ))}
             </div>
           </>
