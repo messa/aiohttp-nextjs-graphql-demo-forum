@@ -21,7 +21,8 @@
     "next": "^7.0.2",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
-    "react-relay": "^2.0.0"
+    "react-relay": "^2.0.0",
+    "subscriptions-transport-ws": "^0.9.15"
   },
   "devDependencies": {
     "babel-plugin-relay": "^2.0.0",

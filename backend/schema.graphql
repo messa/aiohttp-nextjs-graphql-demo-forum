@@ -1,6 +1,7 @@
 schema {
   query: Query
   mutation: Mutation
+  subscription: Subscription
 }
 
 type Category implements Node {
@@ -84,6 +85,10 @@ type ReplyPostConnection {
 type ReplyPostEdge {
   cursor: String!
   node: ReplyPost
+}
+
+type Subscription {
+  countSeconds: Int
 }
 
 type Topic implements Node {

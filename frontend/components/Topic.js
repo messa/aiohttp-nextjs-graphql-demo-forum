@@ -1,8 +1,37 @@
 import React from 'react'
-import { createRefetchContainer, graphql } from 'react-relay'
+import { createRefetchContainer, graphql, requestSubscription } from 'react-relay'
+import { getRelayEnvironment } from '../util/relayEnvironment'
 import Conversation from './Conversation'
 
 class Topic extends React.Component {
+
+  componentDidMount() {
+    this.relaySubscription = requestSubscription(
+      getRelayEnvironment(),
+      {
+        subscription: graphql`
+          subscription Topic_CountSubscription {
+            countSeconds
+          }
+        `,
+        variables: {},
+        onCompleted: () => console.info('subscription completed'),
+        onError: (err) => console.error(err),
+        onNext: (response) => console.info(response),
+      }
+    )
+  }
+
+  componentWillUnmount() {
+    if (this.relaySubscription) {
+      try {
+        this.relaySubscription.dispose()
+      } catch (err) {
+        console.error('Failed to dispose relaySubscription in componentWillUnmount:', err)
+      }
+      this.relaySubscription = null
+    }
+  }
 
   refetch = () => {
     console.info('Topic.refetch')

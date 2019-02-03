@@ -1,11 +1,13 @@
 import { Environment, Network, RecordSource, Store } from 'relay-runtime'
 import fetch from 'isomorphic-unfetch'
+import { SubscriptionClient } from 'subscriptions-transport-ws'
 
 const relayEndpoint = process.browser ? '/api/graphql' : (process.env.RELAY_ENDPOINT || 'http://127.0.0.1:8080/api/graphql')
+const wsUrl = 'ws://localhost:8080/api/subscriptions'
 
 // Define a function that fetches the results of an operation (query/mutation/etc)
 // and returns its results as a Promise:
-async function fetchQuery (operation, variables, cacheConfig, uploadables) {
+async function fetchQuery(operation, variables, cacheConfig, uploadables) {
   const r = await fetch(relayEndpoint, {
     method: 'POST',
     headers: {
@@ -24,6 +26,36 @@ async function fetchQuery (operation, variables, cacheConfig, uploadables) {
   return data
 }
 
+function setupSubscription(config, variables, cacheConfig, observer) {
+  // https://github.com/facebook/relay/issues/1655#issuecomment-349957415
+  const onNext = (result) => {
+    console.debug(`subscriptionClient -> observer.onNext(${JSON.stringify(result)})`)
+    observer.onNext(result)
+  }
+  const onError = (error) => {
+    console.debug(`subscriptionClient -> observer.onError(${JSON.stringify(error)})`)
+    observer.onError(error)
+  }
+  const onComplete = () => {
+    console.debug(`subscriptionClient -> observer.onCompleted()`)
+    observer.onCompleted()
+  }
+  const query = config.text
+  const subscriptionClient = new SubscriptionClient(wsUrl, { reconnect: true })
+  const client = subscriptionClient.request({ query, variables }).subscribe(
+    onNext,
+    onError,
+    onComplete
+  )
+  return {
+    dispose: () => {
+      console.info('setupSubscription dispose')
+      client.unsubscribe()
+    }
+  }
+}
+
+
 let relayEnvironment = null
 
 export function getRelayEnvironment() {
@@ -37,19 +69,21 @@ export function getRelayEnvironment() {
 }
 
 export function initRelayEnvironment ({ records = {} } = {}) {
-  // Create a network layer from the fetch function
-  const network = Network.create(fetchQuery)
-  const store = new Store(new RecordSource(records))
-
   // Make sure to create a new Relay environment for every server-side request so that data
   // isn't shared between connections (which would be bad)
   if (!process.browser) {
-    return new Environment({ network, store })
+    return new Environment({
+      network: Network.create(fetchQuery),
+      store: new Store(new RecordSource(records))
+    })
   }
 
   // reuse Relay environment on client-side
   if (!relayEnvironment) {
-    relayEnvironment = new Environment({ network, store })
+    relayEnvironment = new Environment({
+      network: Network.create(fetchQuery, setupSubscription),
+      store: new Store(new RecordSource(records))
+    })
   }
 
   return relayEnvironment

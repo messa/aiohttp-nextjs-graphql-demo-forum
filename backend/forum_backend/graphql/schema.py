@@ -200,6 +200,13 @@ PostReplyMutation = mutation(
     mutate_and_get_payload=handle_post_reply)
 
 
+async def resolve_count_seconds(root, info):
+    from asyncio import sleep
+    for i in range(100):
+        yield i
+        await sleep(1)
+
+
 Schema = GraphQLSchema(
     query=GraphQLObjectType(
         name='Query',
@@ -220,5 +227,13 @@ Schema = GraphQLSchema(
         name='Mutation',
         fields={
             'postReply': PostReplyMutation,
+        }
+    ),
+    subscription=GraphQLObjectType(
+        name='Subscription',
+        fields={
+            'countSeconds': GraphQLField(
+                type=GraphQLInt,
+                resolver=resolve_count_seconds),
         }
     ))

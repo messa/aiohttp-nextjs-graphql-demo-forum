@@ -3,3 +3,4 @@ cchardet
 aiodns
 pyyaml
 aiohttp-graphql
+graphql-ws

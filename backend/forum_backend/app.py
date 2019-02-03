@@ -3,6 +3,7 @@ from aiohttp_graphql import GraphQLView
 import argparse
 import logging
 from graphql.execution.executors.asyncio import AsyncioExecutor as GQLAIOExecutor
+from graphql_ws.aiohttp import AiohttpSubscriptionServer
 
 from .graphql import Schema
 from .model import Model
@@ -29,4 +30,14 @@ def get_app():
         graphiql=True,
         enable_async=True,
         executor=GQLAIOExecutor())
+
+    subscription_server = AiohttpSubscriptionServer(Schema)
+
+    async def subscriptions(request):
+        ws = web.WebSocketResponse(protocols=('graphql-ws',))
+        await ws.prepare(request)
+        await subscription_server.handle(ws)
+        return ws
+
+    app.router.add_get('/api/subscriptions', subscriptions)
     return app
