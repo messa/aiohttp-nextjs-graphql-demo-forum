@@ -7,7 +7,7 @@ Forum web app using aiohttp, Next.js and GraphQL
 - [Next.js](https://nextjs.org/)
 - [Relay Modern](http://facebook.github.io/relay/docs/en/introduction-to-relay.html)
 
-**Backend component:** manages data, authentication, cookies, websockets
+**Backend component:** manages data, authentication (not implemented yet), cookies, websockets
 
 - [Python](https://www.python.org/)
 - [aiohttp](https://aiohttp.readthedocs.io/en/stable/)
