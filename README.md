@@ -18,7 +18,8 @@ Forum web app using aiohttp, Next.js and GraphQL
 
 Routing:
 
-                          /api/*, /auth/*
+                          /api/*
+                          /auth/*
                         +-----------------> backend (aiohttp)  <--+
                         |                                         | server-side
     --> load balancer --+                                         | render (SSR)
